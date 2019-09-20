@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+data = pd.read_csv('C:/Users/user/Documents/advertising.csv')
+data.head(10)
+data.info()
+data.describe()
+
+from scipy.stats import norm
+sns.distplot(data['Age'], hist=False, color='r', rug=True, fit=norm);
+
+plt.subplots(figsize=(10, 10))
+sns.kdeplot(data.Age, data['Daily Time Spent on Site'], color="b")
+sns.rugplot(data.Age, color="r")
+sns.rugplot(data['Daily Time Spent on Site'],vertical=True)
+
+from pandas.plotting import scatter_matrix
+scatter_matrix(data[['Daily Time Spent on Site', 'Age','Area Income', 'Daily Internet Usage']], figsize=(10,10))
+
+object_variables = ['Ad Topic Line', 'City', 'Country']
+data[object_variables].describe(include=['O'])
+
+data = data.drop(['Ad Topic Line', 'City', 'Country'], axis=1)
+
+data['Timestamp'] = pd.to_datetime(data['Timestamp'])
+
+data['Month'] = data['Timestamp'].dt.month
+data['Day of the month'] = data['Timestamp'].dt.day
+data["Day of the week"] = data['Timestamp'].dt.dayofweek
+data['Hour'] = data['Timestamp'].dt.hour
+data = data.drop(['Timestamp'], axis=1)
+
+data.head()
+
+from sklearn.model_selection import train_test_split
+
+X = data[['Daily Time Spent on Site', 'Age', 'Area Income', 'Daily Internet Usage',
+    'Male', 'Month', 'Day of the month' ,'Day of the week']]
+y = data['Clicked on Ad']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20,random_state=50)
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+
+model_1 = LogisticRegression(solver='lbfgs')
+model_1.fit(X_train, y_train)
+predictions_LR = model_1.predict(X_test)
+
+print('Logistic regression accuracy:', accuracy_score(predictions_LR, y_test))
+print('')
+print('Confusion matrix:')
+print(confusion_matrix(y_test,predictions_LR))
+
+from sklearn.tree import DecisionTreeClassifier
+
+model_2 = DecisionTreeClassifier()
+model_2.fit(X_train, y_train)
+predictions_DT = model_2.predict(X_test)
+
+print('Decision tree accuracy:', accuracy_score(predictions_DT, y_test))
+print('')
+print('Confusion matrix:')
+print(confusion_matrix(y_test,predictions_DT))
